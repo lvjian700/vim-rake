@@ -54,7 +54,7 @@ function! s:find_root(path) abort
   endfor
   let previous = ''
   while root !=# previous && root !=# '/'
-    if filereadable(root.'/Rakefile') || (isdirectory(root.'/lib') && filereadable(root.'/Gemfile'))
+    if filereadable(root.'/Rakefile') || (isdirectory(root.'/app') && filereadable(root.'/Gemfile'))
       if filereadable(root.'/config/environment.rb')
         return ''
       else
@@ -101,25 +101,25 @@ augroup END
 
 let s:projections = {
       \ '*': {},
-      \ 'lib/*.rb': {'type': 'lib', 'alternate': [
-      \   'test/{}_test.rb', 'test/lib/{}_test.rb', 'test/unit/{}_test.rb',
+      \ 'app/*.rb': {'type': 'app', 'alternate': [
+      \   'test/{}_test.rb', 'test/app/{}_test.rb', 'test/unit/{}_test.rb',
       \   'test/{dirname}/test_{basename}.rb',
-      \   'spec/{}_spec.rb', 'spec/lib/{}_spec.rb', 'spec/unit/{}_spec.rb']},
+      \   'spec/{}_spec.rb', 'spec/app/{}_spec.rb', 'spec/unit/{}_spec.rb']},
       \ 'test/test_helper.rb': {'type': 'test'},
       \ 'test/*_test.rb': {
       \   'type': 'test',
-      \   'alternate': 'lib/{}.rb'},
-      \ 'test/lib/*_test.rb': {'alternate': 'lib/{}.rb'},
-      \ 'test/unit/*_test.rb': {'alternate': 'lib/{}.rb'},
+      \   'alternate': 'app/{}.rb'},
+      \ 'test/app/*_test.rb': {'alternate': 'app/{}.rb'},
+      \ 'test/unit/*_test.rb': {'alternate': 'app/{}.rb'},
       \ 'test/**/test_*.rb': {
       \   'type': 'test',
-      \   'alternate': 'lib/{}.rb'},
+      \   'alternate': 'app/{}.rb'},
       \ 'spec/spec_helper.rb': {'type': 'spec'},
       \ 'spec/*_spec.rb': {
       \   'type': 'spec',
-      \   'alternate': 'lib/{}.rb'},
-      \ 'spec/lib/*_spec.rb': {'alternate': 'lib/{}.rb'},
-      \ 'spec/unit/*_spec.rb': {'alternate': 'lib/{}.rb'},
+      \   'alternate': 'app/{}.rb'},
+      \ 'spec/app/*_spec.rb': {'alternate': 'app/{}.rb'},
+      \ 'spec/unit/*_spec.rb': {'alternate': 'app/{}.rb'},
       \ 'rakelib/*.rake': {'type': 'task'},
       \ 'Rakefile': {'type': 'task'}}
 
@@ -153,10 +153,10 @@ function! s:ProjectionistDetect() abort
       let projections['test/*.rb'] = {'dispatch': ruby + ['-Itest', '{file}']}
     endif
     let projections['spec/*_spec.rb'].dispatch = s:binstub(b:rake_root, 'rspec') + ['{file}']
-    call filter(projections['lib/*.rb'].alternate, 'exists(v:val[0:3])')
+    call filter(projections['app/*.rb'].alternate, 'exists(v:val[0:3])')
     call filter(projections, 'v:key[4] !=# "/" || exists(v:key[0:3])')
     let gemspec = fnamemodify(get(split(glob(b:rake_root.'/*.gemspec'), "\n"), 0, 'Gemfile'), ':t')
-    let projections[gemspec] = {'type': 'lib'}
+    let projections[gemspec] = {'type': 'app'}
     if gemspec !=# 'Gemfile'
       let projections[gemspec].dispatch = ['gem', 'build', '{file}']
     endif
@@ -333,8 +333,8 @@ endif
 augroup rake_path
   autocmd!
   autocmd User Rake
-        \ if &suffixesadd =~# '\.rb\>' && stridx(&path, escape(s:project().path('lib'),', ')) < 0 |
-        \   let &l:path = escape(s:project().path('lib'),', ')
+        \ if &suffixesadd =~# '\.rb\>' && stridx(&path, escape(s:project().path('app'),', ')) < 0 |
+        \   let &l:path = escape(s:project().path('app'),', ')
         \     . ',' . escape(s:project().path('ext'),', ') . ',' . &path |
         \ endif
   autocmd User Rake
